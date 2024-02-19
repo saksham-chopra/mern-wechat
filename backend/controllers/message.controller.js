@@ -1,5 +1,6 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { getReceiversocketId, io } from "../socket/socket.js";
 
 export const sendMessage = async (req, res) => {
     try {
@@ -31,7 +32,11 @@ export const sendMessage = async (req, res) => {
 
     //this will run in paralled
     await Promise.all([conversation.save(),newMessage.save()]);
-  
+
+    const receiversocketId = getReceiversocketId(receiverId);
+    if(receiversocketId){
+      io.to(receiversocketId).emit("newMessage",newMessage)   //used for specific client
+    }
       res.status(201).json({ newMessage });
     } catch (error) {
       console.log("Error in sendMessage controller: ", error.message);
